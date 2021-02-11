@@ -2,251 +2,312 @@
 <html lang="en">
 
 <head>
-  <title>Mapa INV</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
-  <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
-  <script src="https://kit.fontawesome.com/91822fdb88.js" crossorigin="anonymous"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Mapa INV</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://kit.fontawesome.com/91822fdb88.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 
 <body>
- 
 
-<!-- Contenedor mapa -->
-  <div id="map"></div>
+    <div id="map"></div>
+
+    <div class="card" id="leyenda_mapa_inv">
+        <h4 class="es"><b>Leyenda</b></h4></br>
+        <!-- <h4 class="en"><b>Legend</b></h4></br> -->
+        <h5 class="es">Último año de actualización</h5>
+        <!-- <h5 class="en">Last year updated</h5> -->
+        <div id="leyenda_mapa_inv"></div>
+    </div>
+
+    <div class="card" id="boton_zoom" onclick="zoom('caribbean')">
+        <i class="fas fa-compress-arrows-alt"></i>
+        <span class="en" style="font-size: x-small;">Caribbean</span>
+        <span class="es" style="font-size: x-small;display:none;">Caribe</span>
+    </div>
 
 </body>
 
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-// Cargar mapa
+        // Cargar mapa
 
-mapboxgl.accessToken = 'pk.eyJ1IjoicmFmZmFlbGxhYW5pbGlvIiwiYSI6ImNrZWlubncydjEwOGgyd21udHdmOWJ4M24ifQ.E2q7D7b-Je_x7VRjbqjAAA';
-var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/light-v10',
-    center: [-83.32, -16.5],
-    zoom: 2.7
-});
+        mapboxgl.accessToken = 'pk.eyJ1IjoicmFmZmFlbGxhYW5pbGlvIiwiYSI6ImNrZWlubncydjEwOGgyd21udHdmOWJ4M24ifQ.E2q7D7b-Je_x7VRjbqjAAA';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [-83.32, -16.5],
+            zoom: 2.7
+        });
 
-map.addControl(new mapboxgl.NavigationControl());
+        /* {
+                'version': 8,
+                'sources': {
+                  'raster-tiles': {
+                    'type': 'raster',
+                    'tiles': [
+                      './tiles/{z}/{x}/{y}.png'
+                      //'https://cepalstat-prod.cepal.org/geo/covid/tiles/{z}/{x}/{y}.png'
+                    ],
+                    'tileSize': 256,
+                    //'attribution': 'Map tiles by me'
+                  }
+                },
+                'sprite': 'mapbox://sprites/mapbox/dark-v10',
+                'glyphs': 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',//ENABLES THE USE OF LABEL
+                'layers': [
+                  {
+                    'id': 'simple-tiles',
+                    'type': 'raster',
+                    'source': 'raster-tiles',
+                    'minzoom': 0,
+                    'maxzoom': 9
+                  }
+                ]
+              } */
 
-var map = L.mapbox.map('map').setView([38, -77], 5);
-map.addControl(L.mapbox.legendControl());
+        map.addControl(new mapboxgl.NavigationControl());
 
-// Función de encendido
-/* encendido = function encendido(x) {
+        //var map = L.mapbox.map('map').setView([38, -77], 5);
+        //map.addControl(L.mapbox.legendControl());
 
-    y = document.getElementById('icono_' + x);
-
-    $(y).toggle();
-
-    var visibility = map.getLayoutProperty(x, 'visibility');
-
-    $("#").hide();
-    $(".mapboxgl-popup-content").hide();
-
-    // toggle layer visibility by changing the layout object's visibility property
-    if (visibility === 'visible') {
-        map.setLayoutProperty(x, 'visibility', 'none');
-        this.className = '';
-    } else {
-        this.className = 'active';
-        map.setLayoutProperty(x, 'visibility', 'visible');
-    }
-
-    if (visibility === 'visible') {
-        map.setLayoutProperty(x, 'visibility', 'none');
-        this.className = '';
-        $('#leyenda_' + x).hide();
-    } else {
-        this.className = 'active';
-        map.setLayoutProperty(x, 'visibility', 'visible');
-        $('#leyenda_' + x).show();
-    }
-}; */
-
-
-/* // Función mostrar descripción
-showdescripcion = function showdescripcion(x) {
-
-    y = document.getElementById(x);
-
-    $(y).toggle();
-};
-
-var hoveredStateId = null; */
-
-// Cargar GeoJSON
-
-map.on('load', function () {
-
-
-    var url = './mapa_inv.geojson';
-    map.addSource('mapa_inv', { type: 'geojson', data: url });
-
-    var url = './centroide.geojson';
-    map.addSource('centroide', { type: 'geojson', data: url });
-    
-
-    // Popup al hacer clic en geometría
-
-    map.on('click', 'mapa_inv', function (e) {
-
-        var nombre = e.features[0].properties.name_es;
-        var seis = e.features[0].properties._2016;
-        var siete = e.features[0].properties._2017;
-        var ocho = e.features[0].properties._2018;
-        var nueve = e.features[0].properties._2019;
-        var veinte = e.features[0].properties._2020;
-        var innerPopup = '<div>' + '<b>'+nombre+'</b>' + '</br>' + 'Informe Nacional Voluntario' + '</br>'+ '<a href="' + seis + '"target="_blank">2016</a>' + '</br>'+ '<a href="' + siete + '"target="_blank"">2017</a>' + '</br>'+ '<a href="' + ocho + '"target="_blank"">2018</a>' + '</br>'+ '<a href="' + nueve + '"target="_blank"">2019</a>' + '</br>'+ '<a href="' + veinte + '"target="_blank"">2020</a>' +'</div>';
-        new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(innerPopup)
-            .addTo(map);
-    });
-
-    // Añadir capas de tipo polígono y sus estilos y respectiva leyenda
-
-    // Paleta violeta #fcfbfd #e9e8f3 #e4e3f0 #babbdb #8c88c0 #63439c #3f007d
-
-    map.loadImage(
-            './icono_centroide.png',
-            function (error, image) {
-                if (error) throw error;
-                map.addImage('icono_centroide', image,{'sdf': true });
-
-                map.addLayer({
-                    'id': 'centroide',
-                    'type': 'symbol',
-                    'source': 'centroide',
-                    'layout': {
-                        'icon-image': 'icono_centroide',
-                        'icon-size': 1.5,
-                    },
-                    'paint': {
-                    'icon-color': [
-                    'match', 
-                    ['get', 'ultimo'], 
-                    
-                    0, '#9b9b9b',                  
-                    2016, '#3c77d4',
-                    2017, '#3c77d4',
-                    2018, '#472d9d',
-                    2019, '#f1ae29',
-                    2020, '#3bc753',
-                    '#d5d8e3'
-                    ]
-                            }
-                        });
-                        }
-                    );
-
-    map.addLayer({
-        'id': 'mapa_inv',
-        'type': 'fill',
-        'source': 'mapa_inv',
-        'layout': {
-            'visibility': 'visible',
-        },
-        'paint': {
-            'fill-color': [
-                "match",
-                ['get', 'ultimo'],
-                0, '#cdcdcd',     
-                2016,'#c1c8d5',
-                2017,'#cddbea',
-                2018,'#483299',
-                2019,'#f8ebce',
-                2020,'#d4f0d7',
-                "#d5d8e3",      
-            ],
-            'fill-opacity': 0.5,
-        }
-    });
-
-    map.addLayer({
-        'id': 'mapa_inv_borde',
-        'type': 'line',
-        'source': 'mapa_inv',
-        'layout': {
-            'visibility': 'visible',
-        },
-        'paint': {
-            'line-color': [
-                "match",
-                ['get', 'ultimo'],
-                0, '#9b9b9b',
-                2016,'#2a4ea1',
-                2017,'#3c77d4',
-                2018,'#472d9d',
-                2019,'#f1ae29',
-                2020,'#3bc753',
-                "#d5d8e3",           
-            ],
-            'line-opacity': 1,
-            'line-width':4,
-        }
-    });
-
-    var leyenda_mapa_inv = [["2016",
-    "#e9e8f3"],
-    ["2017",
-    "#e4e3f0"],
-    ["2018",
-    "#babbdb"],
-    ["2019",
-    "#8c88c0"],
-    ["2020",
-    "#63439c"],
-  ];
-$.each(leyenda_mapa_inv, function (i, record) {
-   var registro = $('<div class="col-2"><span style="background-color: ' + record[1] + ';border-radius: 10%;display: inline-block;height: 10px;width: 10px;z-index: 1;padding-left: 5px;"></span></div><div class="col-10">' + record[0] + '</div>');
-   $('#leyenda_total_ambos').append(registro);
-})
-
-    map.on('mouseenter', 'mapa_inv', function () {
-        map.getCanvas().style.cursor = 'pointer';
-    });
-
-    // Change it back to a pointer when it leaves.
-    map.on('mouseleave', 'mapa_inv', function () {
-        map.getCanvas().style.cursor = '';
-    });
-    //
+        // Función de encendido
+        /* encendido = function encendido(x) {
         
-});
-});
-  
+            y = document.getElementById('icono_' + x);
+        
+            $(y).toggle();
+        
+            var visibility = map.getLayoutProperty(x, 'visibility');
+        
+            $("#").hide();
+            $(".mapboxgl-popup-content").hide();
+        
+            // toggle layer visibility by changing the layout object's visibility property
+            if (visibility === 'visible') {
+                map.setLayoutProperty(x, 'visibility', 'none');
+                this.className = '';
+            } else {
+                this.className = 'active';
+                map.setLayoutProperty(x, 'visibility', 'visible');
+            }
+        
+            if (visibility === 'visible') {
+                map.setLayoutProperty(x, 'visibility', 'none');
+                this.className = '';
+                $('#leyenda_' + x).hide();
+            } else {
+                this.className = 'active';
+                map.setLayoutProperty(x, 'visibility', 'visible');
+                $('#leyenda_' + x).show();
+            }
+        }; */
+
+        // Cargar GeoJSON
+
+        map.on('load', function () {
+
+
+            var url = './mapa_inv.geojson';
+            map.addSource('mapa_inv', { type: 'geojson', data: url });
+
+            var url = './centroide.geojson';
+            map.addSource('centroide', { type: 'geojson', data: url });
+
+            // Popup al hacer clic en geometría
+
+            map.on('click', 'mapa_inv', function (e) {
+
+                var nombre = e.features[0].properties.name_es;
+                var seis = e.features[0].properties._2016;
+                var siete = e.features[0].properties._2017;
+                var ocho = e.features[0].properties._2018;
+                var nueve = e.features[0].properties._2019;
+                var veinte = e.features[0].properties._2020;
+                var innerPopup = '<div>' + '<b>' + nombre + '</b>' + '</br>' + 'Informe Nacional Voluntario' + '</br>';
+                if (seis != 'null') { innerPopup = innerPopup + '<a href="' + seis + '"target="_blank">2016</a>' + '</br>' };
+                if (siete != 'null') { innerPopup = innerPopup + '<a href="' + siete + '"target="_blank">2017</a>' + '</br>' };
+                if (ocho != 'null') { innerPopup = innerPopup + '<a href="' + ocho + '"target="_blank">2018</a>' + '</br>' };
+                if (nueve != 'null') { innerPopup = innerPopup + '<a href="' + nueve + '"target="_blank">2019</a>' + '</br>' };
+                if (veinte != 'null') { innerPopup = innerPopup + '<a href="' + veinte + '"target="_blank">2020</a>' + '</br>' };
+                innerPopup = innerPopup + '</div>';
+                new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(innerPopup)
+                    .addTo(map);
+            });
+
+            /*  map.on('click', 'mapa_inv', function (e) {
+         var nombre = e.features[0].properties.CDCNombre;
+         $("#leyenda_mapa_inv").show();
+         }); */
+
+            // Añadir capas de tipo polígono y sus estilos y respectiva leyenda
+
+            // Paleta violeta #fcfbfd #e9e8f3 #e4e3f0 #babbdb #8c88c0 #63439c #3f007d
+
+            map.loadImage(
+                './icono_centroide.png',
+                function (error, image) {
+                    if (error) throw error;
+                    map.addImage('icono_centroide', image, { 'sdf': true });
+
+                    map.addLayer({
+                        'id': 'centroide',
+                        'type': 'symbol',
+                        'source': 'centroide',
+                        'layout': {
+                            'icon-image': 'icono_centroide',
+                            'icon-size': 1.5,
+                        },
+                        'paint': {
+                            'icon-color': [
+                                'match',
+                                ['get', 'ultimo'],
+
+                                0, '#9b9b9b',
+                                2016, '#3c77d4',
+                                2017, '#3c77d4',
+                                2018, '#472d9d',
+                                2019, '#f1ae29',
+                                2020, '#3bc753',
+                                '#d5d8e3'
+                            ]
+                        }
+                    });
+                }
+            );
+
+            map.addLayer({
+                'id': 'mapa_inv',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'paint': {
+                    'fill-color': [
+                        "match",
+                        ['get', 'ultimo'],
+                        0, '#cdcdcd',
+                        2016, '#c1c8d5',
+                        2017, '#cddbea',
+                        2018, '#483299',
+                        2019, '#f8ebce',
+                        2020, '#d4f0d7',
+                        "#d5d8e3",
+                    ],
+                    'fill-opacity': 0.5,
+                }
+            });
+
+            map.addLayer({
+                'id': 'mapa_inv_borde',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'paint': {
+                    'line-color': [
+                        "match",
+                        ['get', 'ultimo'],
+                        0, '#9b9b9b',
+                        2016, '#2a4ea1',
+                        2017, '#3c77d4',
+                        2018, '#472d9d',
+                        2019, '#f1ae29',
+                        2020, '#3bc753',
+                        "#d5d8e3",
+                    ],
+                    'line-opacity': 1,
+                    'line-width': 4,
+                }
+            });
+
+            var leyenda_mapa_inv = [["Sin información", '#9b9b9b'],
+            ["2016",
+                "#2a4ea1"],
+            ["2017",
+                "#3c77d4"],
+            ["2018",
+                "#472d9d"],
+            ["2019",
+                "#f1ae29"],
+            ["2020",
+                "#3bc753"],
+            ];
+            $.each(leyenda_mapa_inv, function (i, record) {
+                var registro = $('<div type="checkbox" class="col-2"><span style="background-color: ' + record[1] + ';float:left; border-radius: 10%;display: inline-block;height: 20px;width: 20px;z-index: 1;"></span></div><div class="col-10">' + record[0] + '</div>');
+                $('#leyenda_mapa_inv').append(registro);
+            })
+
+            map.on('mouseenter', 'mapa_inv', function () {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'mapa_inv', function () {
+                map.getCanvas().style.cursor = '';
+            });
+            //
+
+        });
+    });
+
 </script>
 
 <style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
 
-body {
-    margin: 0;
-    padding: 0;
-  }
+    .mapboxgl-popup-content {
+        width: fit-content;
+        font-family: 'Maven Pro';
+    }
 
-  .mapboxgl-popup-content{
-    width: fit-content;
-    font-family: 'Maven Pro';
-  }
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0%;
+        width: 100%;
+    }
 
-  #map {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left:0%;
-    width: 100%;
-  }
+    #leyenda_mapa_inv {
+        position: absolute;
+        top: 30%;
+        bottom: 10%;
+        left: 20%;
+        width: fit-content;
+        height: fit-content;
+        background-color: white;
+        padding: 15px;
+    }
 
+
+    #boton_zoom {
+        top: 1%;
+        width: 5%;
+        bottom: 94%;
+        right: 15%;
+        z-index: 1;
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+        padding-top: 5px;
+        background-color: rgba(255, 255, 255, 0.5);
+    }
 </style>
 
 </html>
