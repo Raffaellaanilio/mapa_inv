@@ -13,178 +13,242 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
     <script src="https://kit.fontawesome.com/91822fdb88.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .mapboxgl-popup-content {
+            width: fit-content;
+            font-family: 'Maven Pro';
+            font-size: small;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0%;
+            width: 100%;
+        }
+
+        #leyenda_mapa_inv {
+            position: absolute;
+            top: 30%;
+            left: 1%;
+            width: fit-content;
+            height: fit-content;
+            background-color: white;
+            padding: 10px;
+            font-size: small;
+        }
+
+        #encabezado {
+            z-index: 1000;
+            width: fit-content;
+            padding: 10px;
+            margin: 5px;
+        }
+
+
+        #boton_zoom {
+            top: 1%;
+            width: fit-content;
+            right: 15%;
+            z-index: 1;
+            position: absolute;
+            text-align: center;
+            vertical-align: middle;
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
 </head>
 
 <body>
 
+    <div class="card" id="encabezado">
+        <h3 class="es">Informes Nacionales Voluntarios</h3>
+        <h3 class="en">Voluntary National Review</h3>
+    </div>
+
     <div id="map"></div>
 
     <div class="card" id="leyenda_mapa_inv">
-        <h4 class="es"><b>Leyenda</b></h4></br>
-        <!-- <h4 class="en"><b>Legend</b></h4></br> -->
-        <h5 class="es">Último año de actualización</h5>
-        <!-- <h5 class="en">Last year updated</h5> -->
-        <div id="leyenda_mapa_inv"></div>
+                <div id="leyenda_mapa_contenido">
+                    <h6 class="es">Año de actualización</h6>
+                    <h6 class="en">Last year updated</h6>
+                </div>
+                <form>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="switch1" onchange="encender_layers()">
+                        <label class="custom-control-label" for="switch1"><span class="es"
+                                style="display: none;">Filtrar por año</span><span class="en"
+                                style="display: none;">Filter by year</span></label>
+                    </div>
+                </form>
     </div>
 
     <div class="card" id="boton_zoom" onclick="zoom('caribbean')">
         <i class="fas fa-compress-arrows-alt"></i>
-        <span class="en" style="font-size: x-small;">Caribbean</span>
+        <span class="en" style="font-size: x-small;display:none;">Caribbean</span>
         <span class="es" style="font-size: x-small;display:none;">Caribe</span>
     </div>
 
 </body>
+<script src="./data/mapa_inv.js"></script>
+<script src="./data/centroide.js"></script>
 
 <script>
     $(document).ready(function () {
 
+        encendedido_layers = false;
+
+
+        function getQueryVariableGET(variable) {
+            // Estoy asumiendo que query es window.location.search.substring(1);
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
+            return false;
+        };
+
+        var lang = getQueryVariableGET('lang');
+
+        language = function language() {
+            if (lang == 'en') {
+                $(".en").css("display", "block"); $(".es").css("display", "none");
+            }
+            else if (lang == 'es') { $(".es").css("display", "block"); $(".en").css("display", "none"); };
+        };
+        language();
+        //language = 'es';
+
         // Cargar mapa
 
         mapboxgl.accessToken = 'pk.eyJ1IjoicmFmZmFlbGxhYW5pbGlvIiwiYSI6ImNrZWlubncydjEwOGgyd21udHdmOWJ4M24ifQ.E2q7D7b-Je_x7VRjbqjAAA';
-        var start = [-83.32, -16.5];
-        var end = [-72.971, 17.435];
         var map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v10',
-            center: start,
-            zoom: 2.7
-        });
-
-        var isAtStart = true;
-
-        document.getElementById('boton_zoom').addEventListener('click', function () {
-            // depending on whether we're currently at point a or b, aim for
-            // point a or b
-            var target = isAtStart ? end : start;
-
-            // and now we're at the opposite point
-            isAtStart = !isAtStart;
-
-            map.flyTo({
-                // These options control the ending camera position: centered at
-                // the target, at zoom level 9, and north up.
-                center: target,
-                zoom: 5,
-                bearing: 0,
-
-                // These options control the flight curve, making it move
-                // slowly and zoom out almost completely before starting
-                // to pan.
-                speed: 1, // make the flying slow
-                curve: 2, // change the speed at which it zooms out
-
-                // This can be any easing function: it takes a number between
-                // 0 and 1 and returns another number between 0 and 1.
-                easing: function (t) {
-                    return t;
-                },
-
-                // this animation is considered essential with respect to prefers-reduced-motion
-                essential: true
-            });
-        });
-
-        /* {
+            style: {
                 'version': 8,
                 'sources': {
-                  'raster-tiles': {
-                    'type': 'raster',
-                    'tiles': [
-                      './tiles/{z}/{x}/{y}.png'
-                      //'https://cepalstat-prod.cepal.org/geo/covid/tiles/{z}/{x}/{y}.png'
-                    ],
-                    'tileSize': 256,
-                    //'attribution': 'Map tiles by me'
-                  }
+                    'raster-tiles': {
+                        'type': 'raster',
+                        'tiles': [
+                            //'./tiles/{z}/{x}/{y}.png'
+                            //'https://cepalstat-prod.cepal.org/geo/covid/tiles/{z}/{x}/{y}.png'
+                            'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+                            //'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}'
+                        ],
+                        'tileSize': 256,
+                        'attribution': 'ECLAC - CEPAL 2021. v 0.2'
+                    }
                 },
                 'sprite': 'mapbox://sprites/mapbox/dark-v10',
                 'glyphs': 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',//ENABLES THE USE OF LABEL
                 'layers': [
-                  {
-                    'id': 'simple-tiles',
-                    'type': 'raster',
-                    'source': 'raster-tiles',
-                    'minzoom': 0,
-                    'maxzoom': 9
-                  }
+                    {
+                        'id': 'simple-tiles',
+                        'type': 'raster',
+                        'source': 'raster-tiles',
+                        'minzoom': 0,
+                        'maxzoom': 9
+                    }
                 ]
-              } */
+            },
+            //'mapbox://styles/mapbox/light-v10',
+            bounds: new mapboxgl.LngLatBounds([-140, -60], [-34, 34])
+            //center: [-83.32, -16.5],
+            //zoom: 2.7
+        });
+
 
         map.addControl(new mapboxgl.NavigationControl());
 
-        //var map = L.mapbox.map('map').setView([38, -77], 5);
-        //map.addControl(L.mapbox.legendControl());
 
-        // Función de encendido
-        /* encendido = function encendido(x) {
-        
-            y = document.getElementById('icono_' + x);
-        
-            $(y).toggle();
-        
-            var visibility = map.getLayoutProperty(x, 'visibility');
-        
-            $("#").hide();
-            $(".mapboxgl-popup-content").hide();
-        
-            // toggle layer visibility by changing the layout object's visibility property
-            if (visibility === 'visible') {
-                map.setLayoutProperty(x, 'visibility', 'none');
-                this.className = '';
-            } else {
-                this.className = 'active';
-                map.setLayoutProperty(x, 'visibility', 'visible');
-            }
-        
-            if (visibility === 'visible') {
-                map.setLayoutProperty(x, 'visibility', 'none');
-                this.className = '';
-                $('#leyenda_' + x).hide();
-            } else {
-                this.className = 'active';
-                map.setLayoutProperty(x, 'visibility', 'visible');
-                $('#leyenda_' + x).show();
-            }
-        }; */
-
-        // Cargar GeoJSON
 
         map.on('load', function () {
+    
+
+            map.addSource('mapa_inv', { type: 'geojson', data: paises });
 
 
-            var url = './mapa_inv.geojson';
-            map.addSource('mapa_inv', { type: 'geojson', data: url });
-
-            var url = './centroide.geojson';
-            map.addSource('centroide', { type: 'geojson', data: url });
+            map.addSource('centroide', { type: 'geojson', data: centroide });
 
             // Popup al hacer clic en geometría
 
-            map.on('click', 'mapa_inv', function (e) {
+            var popup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: false
+            });
 
-                var nombre = e.features[0].properties.name_es;
+
+
+            map.on('click', 'consulta', function (e) {
+                if (lang == 'es') {
+                    var nombre = e.features[0].properties.name_es;
+                    var informe = 'Informe Nacional Voluntario'
+                } else {
+                    var nombre = e.features[0].properties.name_en;
+                    var informe = 'Voluntary National Review'
+                }
+
                 var seis = e.features[0].properties._2016;
                 var siete = e.features[0].properties._2017;
                 var ocho = e.features[0].properties._2018;
                 var nueve = e.features[0].properties._2019;
                 var veinte = e.features[0].properties._2020;
-                var innerPopup = '<div>' + '<b>' + nombre + '</b>' + '</br>' + 'Informe Nacional Voluntario' + '</br>';
+                var ultimo = e.features[0].properties.ultimo;
+                var innerPopup = '<div>' + '<b>' + nombre + '</b>' + '</br>' + informe + '</br>';
                 if (seis != 'null') { innerPopup = innerPopup + '<a href="' + seis + '"target="_blank">2016</a>' + '</br>' };
                 if (siete != 'null') { innerPopup = innerPopup + '<a href="' + siete + '"target="_blank">2017</a>' + '</br>' };
                 if (ocho != 'null') { innerPopup = innerPopup + '<a href="' + ocho + '"target="_blank">2018</a>' + '</br>' };
                 if (nueve != 'null') { innerPopup = innerPopup + '<a href="' + nueve + '"target="_blank">2019</a>' + '</br>' };
                 if (veinte != 'null') { innerPopup = innerPopup + '<a href="' + veinte + '"target="_blank">2020</a>' + '</br>' };
+                if (ultimo == 0 && lang == 'es') { innerPopup = innerPopup + '<span style="color:grey;font-style: italic;">No ha presentado</span>' + '</br>'; };
+                if (ultimo == 0 && lang == 'en') { innerPopup = innerPopup + '<span style="color:grey;font-style: italic;">No presentation available</span>' + '</br>'; };
                 innerPopup = innerPopup + '</div>';
-                new mapboxgl.Popup()
-                    .setLngLat(e.lngLat)
-                    .setHTML(innerPopup)
-                    .addTo(map);
+                popup.setLngLat(e.lngLat).setHTML(innerPopup).addTo(map);
             });
 
-            // Añadir capas de tipo polígono y sus estilos y respectiva leyenda
+            map.on('click', 'centroide', function (e) {
+
+                if (lang == 'es') {
+                    var nombre = e.features[0].properties.name_es;
+                    var informe = 'Informe Nacional Voluntario'
+                } else {
+                    var nombre = e.features[0].properties.name_en;
+                    var informe = 'Voluntary National Review'
+                }
+
+                var seis = e.features[0].properties._2016;
+                var siete = e.features[0].properties._2017;
+                var ocho = e.features[0].properties._2018;
+                var nueve = e.features[0].properties._2019;
+                var veinte = e.features[0].properties._2020;
+                var ultimo = e.features[0].properties.ultimo;
+                var innerPopup = '<div>' + '<b>' + nombre + '</b>' + '</br>' + informe + '</br>';
+                if (seis != 'null') { innerPopup = innerPopup + '<a href="' + seis + '"target="_blank">2016</a>' + '</br>' };
+                if (siete != 'null') { innerPopup = innerPopup + '<a href="' + siete + '"target="_blank">2017</a>' + '</br>' };
+                if (ocho != 'null') { innerPopup = innerPopup + '<a href="' + ocho + '"target="_blank">2018</a>' + '</br>' };
+                if (nueve != 'null') { innerPopup = innerPopup + '<a href="' + nueve + '"target="_blank">2019</a>' + '</br>' };
+                if (veinte != 'null') { innerPopup = innerPopup + '<a href="' + veinte + '"target="_blank">2020</a>' + '</br>' };
+                if (ultimo == 0 && lang == 'es') { innerPopup = innerPopup + '<span style="color:grey;font-style: italic;">No ha presentado</span>' + '</br>'; };
+                if (ultimo == 0 && lang == 'en') { innerPopup = innerPopup + '<span style="color:grey;font-style: italic;">No presentation available</span>' + '</br>'; };
+                innerPopup = innerPopup + '</div>';
+                popup.setLngLat(e.lngLat).setHTML(innerPopup).addTo(map);
+
+            });
+
 
             map.loadImage(
-                './icono_centroide.png',
+                './data/icono_centroide.png',
                 function (error, image) {
                     if (error) throw error;
                     map.addImage('icono_centroide', image, { 'sdf': true });
@@ -195,7 +259,8 @@
                         'source': 'centroide',
                         'layout': {
                             'icon-image': 'icono_centroide',
-                            'icon-size': 1.5,
+                            'icon-size': 0.75,
+                            'visibility': 'visible',
                         },
                         'paint': {
                             'icon-color': [
@@ -203,11 +268,11 @@
                                 ['get', 'ultimo'],
 
                                 0, '#9b9b9b',
-                                2016, '#3c77d4',
-                                2017, '#3c77d4',
-                                2018, '#472d9d',
-                                2019, '#f1ae29',
-                                2020, '#3bc753',
+                                2016, '#5d00a6',
+                                2017, '#9c179e',
+                                2018, '#cb4778',
+                                2019, '#ed7953',
+                                2020, '#feb32f',
                                 '#d5d8e3'
                             ]
                         }
@@ -216,127 +281,392 @@
             );
 
             map.addLayer({
-                'id': 'mapa_inv',
+                'id': 'consulta',
                 'type': 'fill',
                 'source': 'mapa_inv',
                 'layout': {
                     'visibility': 'visible',
                 },
                 'paint': {
-                    'fill-color': [
-                        "match",
-                        ['get', 'ultimo'],
-                        0, '#cdcdcd',
-                        2016, '#c1c8d5',
-                        2017, '#cddbea',
-                        2018, '#483299',
-                        2019, '#f8ebce',
-                        2020, '#d4f0d7',
-                        "#d5d8e3",
-                    ],
+                    'fill-color': '#FFFFFF',
+                    'fill-opacity': 0,
+                }
+            });
+
+            map.addLayer({
+                'id': 'relleno_0',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'filter': ['==', 'ultimo', 0],
+                'paint': {
+                    'fill-color': '#FFFFFF',
                     'fill-opacity': 0.5,
                 }
             });
 
             map.addLayer({
-                'id': 'mapa_inv_borde',
-                'type': 'line',
+                'id': 'contiene_0',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'none',
+                },
+                'filter': ['==', 'ultimo', 0],
+                'paint': {
+                    'fill-color': '#9b9b9b',
+                    'fill-opacity': 0.7,
+                }
+            });
+
+            map.addLayer({
+                'id': 'relleno_2020',
+                'type': 'fill',
                 'source': 'mapa_inv',
                 'layout': {
                     'visibility': 'visible',
                 },
+                'filter': ['==', 'ultimo', 2020],
                 'paint': {
-                    'line-color': [
-                        "match",
-                        ['get', 'ultimo'],
-                        0, '#9b9b9b',
-                        2016, '#2a4ea1',
-                        2017, '#3c77d4',
-                        2018, '#472d9d',
-                        2019, '#f1ae29',
-                        2020, '#3bc753',
-                        "#d5d8e3",
-                    ],
-                    'line-opacity': 1,
-                    'line-width': 4,
+                    'fill-color': '#feb32f',
+                    'fill-opacity': 0.4,
                 }
             });
 
-            var leyenda_mapa_inv = [["Sin información", '#9b9b9b'],
-            ["2016",
-                "#2a4ea1"],
-            ["2017",
-                "#3c77d4"],
-            ["2018",
-                "#472d9d"],
-            ["2019",
-                "#f1ae29"],
-            ["2020",
-                "#3bc753"],
+            map.addLayer({
+                'id': 'contiene_2020',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'none',
+                },
+                'filter': ['==', 'con_2020', 1],
+                'paint': {
+                    'fill-color': '#feb32f',
+                    'fill-opacity': 0.5,
+                }
+            });
+
+            map.addLayer({
+                'id': 'relleno_2019',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'filter': ['==', 'ultimo', 2019],
+                'paint': {
+                    'fill-color': '#ed7953',
+                    'fill-opacity': 0.4,
+                }
+            });
+
+            map.addLayer({
+                'id': 'contiene_2019',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'none',
+                },
+                'filter': ['==', 'con_2019', 1],
+                'paint': {
+                    'fill-color': '#ed7953',
+                    'fill-opacity': 0.5,
+                }
+            });
+
+            map.addLayer({
+                'id': 'relleno_2018',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'filter': ['==', 'ultimo', 2018],
+                'paint': {
+                    'fill-color': '#cb4778',
+                    'fill-opacity': 0.4,
+                }
+            });
+
+            map.addLayer({
+                'id': 'contiene_2018',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'none',
+                },
+                'filter': ['==', 'con_2018', 1],
+                'paint': {
+                    'fill-color': '#cb4778',
+                    'fill-opacity': 0.5,
+                }
+            });
+
+
+            map.addLayer({
+                'id': 'relleno_2017',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'filter': ['==', 'ultimo', 2017],
+                'paint': {
+                    'fill-color': '#9c179e',
+                    'fill-opacity': 0.4,
+                }
+            });
+
+            map.addLayer({
+                'id': 'contiene_2017',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'none',
+                },
+                'filter': ['==', 'con_2017', 1],
+                'paint': {
+                    'fill-color': '#9c179e',
+                    'fill-opacity': 0.5,
+                }
+            });
+
+            map.addLayer({
+                'id': 'relleno_2016',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'filter': ['==', 'ultimo', 2016],
+                'paint': {
+                    'fill-color': '#5d00a6',
+                    'fill-opacity': 0.4,
+                }
+            });
+
+            map.addLayer({
+                'id': 'contiene_2016',
+                'type': 'fill',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'none',
+                },
+                'filter': ['==', 'con_2016', 1],
+                'paint': {
+                    'fill-color': '#5d00a6',
+                    'fill-opacity': 0.5,
+                }
+            });
+
+            map.addLayer({
+                'id': 'borde_0',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                    'line-cap': 'round',
+                },
+                'filter': ['==', 'ultimo', 0],
+                'paint': {
+                    'line-color': '#9b9b9b',
+                    'line-opacity': 0.7,
+                    'line-width': 3,
+
+                }
+            });
+
+            map.addLayer({
+                'id': 'borde_2020',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                    'line-cap': 'round',
+                },
+                'filter': ['==', 'ultimo', 2020],
+                'paint': {
+                    'line-color': '#feb32f',
+                    'line-opacity': 0.7,
+                    'line-width': 1,
+
+                }
+            });
+
+            map.addLayer({
+                'id': 'borde_2019',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                    'line-cap': 'round',
+                },
+                'filter': ['==', 'ultimo', 2019],
+                'paint': {
+                    'line-color': '#ed7953',
+                    'line-opacity': 0.7,
+                    'line-width': 1,
+
+                }
+            });
+
+            map.addLayer({
+                'id': 'borde_2018',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                    'line-cap': 'round',
+                },
+                'filter': ['==', 'ultimo', 2018],
+                'paint': {
+                    'line-color': '#cb4778',
+                    'line-opacity': 0.7,
+                    'line-width': 1,
+
+                }
+            });
+
+            map.addLayer({
+                'id': 'borde_2017',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                    'line-cap': 'round',
+                },
+                'filter': ['==', 'ultimo', 2017],
+                'paint': {
+                    'line-color': '#9c179e',
+                    'line-opacity': 0.7,
+                    'line-width': 1,
+
+                }
+            });
+
+            map.addLayer({
+                'id': 'borde_2016',
+                'type': 'line',
+                'source': 'mapa_inv',
+                'layout': {
+                    'visibility': 'visible',
+                    'line-cap': 'round',
+                },
+                'filter': ['==', 'ultimo', 2016],
+                'paint': {
+                    'line-color': '#5d00a6',
+                    'line-opacity': 0.7,
+                    'line-width': 1,
+
+                }
+            });
+
+            var leyenda_mapa_inv = [
+                ["2020", "#feb32f"],
+                ["2019", "#ed7953"],
+                ["2018", "#cb4778"],
+                ["2017", "#9c179e"],
+                ["2016", "#5d00a6"],
+                ["0", '#9b9b9b']
             ];
             $.each(leyenda_mapa_inv, function (i, record) {
-                var registro = $('<div type="checkbox" class="col-2"><span style="background-color: ' + record[1] + ';float:left; border-radius: 10%;display: inline-block;height: 20px;width: 20px;z-index: 1;"></span></div><div class="col-10">' + record[0] + '</div>');
-                $('#leyenda_mapa_inv').append(registro);
+                var contenido = '';
+                if (record[0] == "0") {
+                    if (lang == 'es') { contenido = 'No ha presentado'; }
+                    else { contenido = 'No presentation available'; }
+                } else { contenido = record[0] }
+                var registro = $('<div class="row"><div class="col-1 encendedor" style="display:none;"><input class="layer_checkbox" type="checkbox"  value="" id="check_' + record[0] + '" onchange="toggle_layer(\'' + record[0] + '\')"></div><div class="col-1"><span style="background-color: ' + record[1] + ';float:left; border-radius: 10%;display: inline-block;height: 15px;width: 15px;z-index: 1;"></span></div><div class="col-8">' + contenido + '</div></div>');
+                $('#leyenda_mapa_contenido').append(registro);
             })
 
-            map.on('mouseenter', 'mapa_inv', function () {
+            map.on('mouseenter', 'consulta', function () {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
+            map.on('mouseenter', 'centroide', function () {
+                map.getCanvas().style.cursor = 'pointer';
+            });
             // Change it back to a pointer when it leaves.
-            map.on('mouseleave', 'mapa_inv', function () {
+            map.on('mouseleave', 'consulta', function () {
                 map.getCanvas().style.cursor = '';
             });
-            //
+
 
         });
+        zoom = function zoom(x) {
+
+            var display_en = '';
+            var display_es = '';
+            if (lang == 'en') { display_en = 'inline'; display_es = 'none'; } else { display_en = 'none'; display_es = 'inline'; };
+
+
+            if (x == 'caribbean') {
+                map.flyTo({ center: [-79, 17.605], zoom: 5 });
+                $("#boton_zoom").html('<i class="fas fa-expand-arrows-alt"></i><span class="en" style="font-size: 10px;display:' + display_en + ';">LAC</span><span class="es" style="font-size: 10px;display:' + display_es + ';">LAC</span>');
+                $("#boton_zoom").attr("onclick", "zoom('lac')");
+                //
+            } else {
+                map.flyTo({ center: [-80, -16], zoom: 2.5 });
+                $("#boton_zoom").html('<i class="fas fa-compress-arrows-alt"></i><span class="en" style="font-size: 10px;display:' + display_en + ';">Caribbean</span><span class="es" style="display:' + display_es + ';font-size: 10px;">Caribe</span>');
+                $("#boton_zoom").attr("onclick", "zoom('caribbean')");
+            }
+        }; //END ZOOM TO LAC - CARIBBEAN   
+        encender_layers = function encender_layers(x) {
+            if (encendedido_layers == false) {
+                $(".encendedor").show();
+                encendedido_layers = true;
+                map.setLayoutProperty('relleno_0', 'visibility', 'none');
+                map.setLayoutProperty('relleno_2020', 'visibility', 'none');
+                map.setLayoutProperty('relleno_2019', 'visibility', 'none');
+                map.setLayoutProperty('relleno_2018', 'visibility', 'none');
+                map.setLayoutProperty('relleno_2017', 'visibility', 'none');
+                map.setLayoutProperty('relleno_2016', 'visibility', 'none');
+                map.setLayoutProperty('borde_0', 'visibility', 'none');
+                map.setLayoutProperty('borde_2020', 'visibility', 'none');
+                map.setLayoutProperty('borde_2019', 'visibility', 'none');
+                map.setLayoutProperty('borde_2018', 'visibility', 'none');
+                map.setLayoutProperty('borde_2017', 'visibility', 'none');
+                map.setLayoutProperty('borde_2016', 'visibility', 'none');
+                map.setLayoutProperty('centroide', 'visibility', 'none');
+                map.setLayoutProperty('contiene_2020', 'visibility', 'visible');
+                $("#check_2020").prop('checked', true);
+            } else {
+                $(".encendedor").hide();
+                encendedido_layers = false;
+                map.setLayoutProperty('relleno_0', 'visibility', 'visible');
+                map.setLayoutProperty('relleno_2020', 'visibility', 'visible');
+                map.setLayoutProperty('relleno_2019', 'visibility', 'visible');
+                map.setLayoutProperty('relleno_2018', 'visibility', 'visible');
+                map.setLayoutProperty('relleno_2017', 'visibility', 'visible');
+                map.setLayoutProperty('relleno_2016', 'visibility', 'visible');
+                map.setLayoutProperty('borde_0', 'visibility', 'visible');
+                map.setLayoutProperty('borde_2020', 'visibility', 'visible');
+                map.setLayoutProperty('borde_2019', 'visibility', 'visible');
+                map.setLayoutProperty('borde_2018', 'visibility', 'visible');
+                map.setLayoutProperty('borde_2017', 'visibility', 'visible');
+                map.setLayoutProperty('borde_2016', 'visibility', 'visible');
+                map.setLayoutProperty('centroide', 'visibility', 'visible');
+                map.setLayoutProperty('contiene_0', 'visibility', 'none');
+                map.setLayoutProperty('contiene_2020', 'visibility', 'none');
+                map.setLayoutProperty('contiene_2019', 'visibility', 'none');
+                map.setLayoutProperty('contiene_2018', 'visibility', 'none');
+                map.setLayoutProperty('contiene_2017', 'visibility', 'none');
+                map.setLayoutProperty('contiene_2016', 'visibility', 'none');
+                $(".layer_checkbox").prop('checked', false);
+            }
+        };
+        toggle_layer = function toggle_layer(x) {
+            if (map.getLayoutProperty('contiene_' + x, 'visibility') == 'none') {
+                map.setLayoutProperty('contiene_' + x, 'visibility', 'visible');
+            } else {
+                map.setLayoutProperty('contiene_' + x, 'visibility', 'none');
+            };
+        }
     });
 
 </script>
-
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
-    .mapboxgl-popup-content {
-        width: fit-content;
-        font-family: 'Maven Pro';
-    }
-
-    #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0%;
-        width: 100%;
-    }
-
-    #leyenda_mapa_inv {
-        position: absolute;
-        top: 30%;
-        bottom: 10%;
-        left: 8%;
-        width: fit-content;
-        height: fit-content;
-        background-color: white;
-        padding: 15px;
-    }
-
-
-    #boton_zoom {
-        top: 1%;
-        width: 5%;
-        bottom: 94%;
-        right: 15%;
-        z-index: 1;
-        position: absolute;
-        text-align: center;
-        vertical-align: middle;
-        padding-top: 5px;
-        background-color: rgba(255, 255, 255, 0.5);
-    }
-</style>
 
 </html>
