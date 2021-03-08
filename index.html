@@ -30,6 +30,7 @@
             top: 0;
             bottom: 0;
             left: 0%;
+            right: 0%;
             width: 100%;
         }
 
@@ -47,7 +48,7 @@
         #encabezado {
             z-index: 1000;
             width: fit-content;
-            padding: 10px;
+            padding: 5px;
             margin: 5px;
         }
 
@@ -69,8 +70,8 @@
 <body>
 
     <div class="card" id="encabezado">
-        <h3 class="es">Informes Nacionales Voluntarios</h3>
-        <h3 class="en">Voluntary National Review</h3>
+        <h6 class="es">Informes Nacionales Voluntarios</h6>
+        <h6 class="en">Voluntary National Review</h6>
     </div>
 
     <div id="map"></div>
@@ -163,7 +164,7 @@
                 ]
             },
             //'mapbox://styles/mapbox/light-v10',
-            bounds: new mapboxgl.LngLatBounds([-140, -60], [-34, 34])
+            bounds: new mapboxgl.LngLatBounds([-160, -58], [-50, 35])
             //center: [-83.32, -16.5],
             //zoom: 2.7
         });
@@ -604,12 +605,12 @@
 
 
             if (x == 'caribbean') {
-                map.flyTo({ center: [-79, 17.605], zoom: 5 });
+                map.flyTo({ center: [-84, 19.605], zoom: 2.9 });
                 $("#boton_zoom").html('<i class="fas fa-expand-arrows-alt"></i><span class="en" style="font-size: 10px;display:' + display_en + ';">LAC</span><span class="es" style="font-size: 10px;display:' + display_es + ';">LAC</span>');
                 $("#boton_zoom").attr("onclick", "zoom('lac')");
                 //
             } else {
-                map.flyTo({ center: [-80, -16], zoom: 2.5 });
+                map.flyTo({ center: [-110, -16], zoom: 1 });
                 $("#boton_zoom").html('<i class="fas fa-compress-arrows-alt"></i><span class="en" style="font-size: 10px;display:' + display_en + ';">Caribbean</span><span class="es" style="display:' + display_es + ';font-size: 10px;">Caribe</span>');
                 $("#boton_zoom").attr("onclick", "zoom('caribbean')");
             }
